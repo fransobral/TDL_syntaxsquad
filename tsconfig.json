@@ -1,0 +1,5 @@
+{
+    "compilerIptions":{
+        "noImplicitAny": false
+    }
+}
