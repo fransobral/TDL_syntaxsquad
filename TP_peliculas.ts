@@ -21,16 +21,16 @@ async function searchMovieByName(apiKey: string, movieName: string): Promise<any
       const movieResponse = await fetch(movieUrl);
 
       if (!movieResponse.ok) {
-        throw new Error(`Error al obtener la información de la película. Código de estado: ${movieResponse.status}`);
+        throw new Error(`Error when retrieving movie information. Status code: ${movieResponse.status}`);
       }
 
       const movieData = await movieResponse.json();
       return movieData;
     } else {
-      throw new Error('No se encontraron resultados para la película.');
+      throw new Error('No results were found for the movie.');
     }
   } catch (error) {
-    throw new Error(`Error en la búsqueda de la película: ${error.message}`);
+    throw new Error(`Error in the movie search.: ${error.message}`);
   }
 }
 
@@ -46,13 +46,16 @@ searchMovieByName(apiKey, movieName).then((movieInfo) => {
   });*/
 
 function printMovieDetails(movieInfo) {
-  const { title, release_date, budget, overview, vote_average } = movieInfo;
+  const { title, release_date, budget, overview, vote_average, genres } = movieInfo;
+  const releaseYear = release_date.split('-')[0];
+  const genreNames = genres.map((genre) => genre.name).join(', ');
 
-  console.log('Nombre de la película:', title);
-  console.log('Año de lanzamiento:', release_date.split('-')[0]);
-  console.log('Presupuesto: US$', budget);
-  console.log('Descripción:', overview);
-  console.log('Puntaje:', vote_average);
+  console.log('Movie Name:', title);
+  console.log('Release Year:', releaseYear);
+  console.log('Budget:', budget);
+  console.log('Description:', overview);
+  console.log('Rating:', vote_average);
+  console.log('Genre:', genreNames);
 }
 
 // Example usage:
