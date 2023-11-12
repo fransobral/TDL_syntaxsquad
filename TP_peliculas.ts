@@ -35,15 +35,8 @@ async function searchMovieByName(apiKey: string, movieName: string): Promise<any
 }
 
 const apiKey = '08c6fb59f7c71d29805136fe34281282'; // Reemplaza con tu clave de API válida de TMDb
-const movieName = 'cars'; // Reemplaza con el nombre de la película que deseas buscar
+const movieName = 'Avatar'; // Reemplaza con el nombre de la película que deseas buscar
 
-/* IMPRIME EL JSON COMPLETO
-searchMovieByName(apiKey, movieName).then((movieInfo) => {
-    console.log('Información de la película:', movieInfo);
-  })
-  .catch((error) => {
-    console.error('Error:', error);
-  });*/
 
 function printMovieDetails(movieInfo) {
   const { title, release_date, budget, overview, vote_average, genres } = movieInfo;
@@ -61,6 +54,42 @@ function printMovieDetails(movieInfo) {
 // Example usage:
 searchMovieByName(apiKey, movieName).then((movieInfo) => {
     printMovieDetails(movieInfo);
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
+
+
+async function searchMoviesByGenre(apiKey, genreId) {
+  try {
+    // Paso 1: Obtener la lista de películas por género
+    const genreUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}`;
+    const genreResponse = await fetch(genreUrl);
+
+    if (!genreResponse.ok) {
+      throw new Error(`Error en la búsqueda de películas por género. Código de estado: ${genreResponse.status}`);
+    }
+
+    const genreData = await genreResponse.json();
+
+    // Paso 2: Retornar la lista de películas encontradas
+    if (genreData.results && genreData.results.length > 0) {
+      return genreData.results;
+    } else {
+      throw new Error('No se encontraron películas para el género especificado.');
+    }
+  } catch (error) {
+    throw new Error(`Error en la búsqueda de películas por género: ${error.message}`);
+  }
+}
+
+// Example usage:
+const genreId = 28; // Reemplaza con el ID del género que deseas buscar (28 es el ID para el género "Acción")
+searchMoviesByGenre(apiKey, genreId).then((movies) => {
+    console.log(`Películas del género con ID ${genreId}:`);
+    movies.forEach((movie) => {
+      console.log(`- ${movie.title} (${movie.release_date.split('-')[0]})`);
+    });
   })
   .catch((error) => {
     console.error('Error:', error);
