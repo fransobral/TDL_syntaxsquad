@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "TP_peliculas": "ts-node TP_peliculas.ts",
+    "TP_peliculas_funciona": "ts-node TP_peliculas_funciona.ts",
     "calculator": "ts-node calculator.ts",
     "multiplier": "ts-node multiplier.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
