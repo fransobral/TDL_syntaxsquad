@@ -7,10 +7,11 @@ Nelson Avila - 100244
 
 Oura, Jacqueline - 87622
 
-En este proyecto crearemmos una webapp para poder recomendar peliculas a nuestros clientes con distintos algoritmos. 
+En este proyecto crearemmos una webapp para poder recomendar peliculas a nuestros clientes con distintos algoritmos.
 
 
 Instalar dependencias:
+npm install --save-dev concurrently
 
 
 Levantar proyecto:

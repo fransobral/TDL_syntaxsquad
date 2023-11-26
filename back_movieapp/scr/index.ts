@@ -2,9 +2,7 @@ import express from 'express';
 import usersRoutes from './Routes/users';
 import userMovieRoutes from './Routes/user_movie';
 import moviesRoutes from './Routes/movies';
-//import { DataBase } from './DataBasee';
 
-//const db = new DataBase();
 const app = express();
 const port = 3000
 
