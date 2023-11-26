@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { QueryResult } from 'pg';
-import { pool } from '../database';
+import { pool } from '../DataBase';
 
 function printError(error: unknown, res: Response<any, Record<string, any>>) {
     let message = 'An error occurred, but it is not an instance of Error.';
@@ -31,7 +31,6 @@ export const getUserMovieId = async (req: Request, res: Response): Promise<Respo
 export const getUserMovieUserId = async (req: Request, res: Response): Promise<Response> => {
     try {
         const id = parseInt(req.params.id);
-        console.log(id)
         const response: QueryResult = await pool.query('select * from user_movie where status = 1 and user_id = $1', [id]);
         return res.status(200).json(response.rows);
     } catch (error) {

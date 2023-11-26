@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { QueryResult } from 'pg';
-import { pool } from '../database';
+import { pool } from '../DataBase';
 
 function printError(error: unknown, res: Response<any, Record<string, any>>) {
     let message = 'An error occurred, but it is not an instance of Error.';
