@@ -1,212 +1,225 @@
 import fetch from 'node-fetch';
-class Movie {
-  public title: string;
-  public genres: string[];
-  public actors: string[];
 
-  constructor(title: string, genres: string[], actors: string[]) {
-      this.title = title;
-      this.genres = genres;
-      this.actors = actors;
+
+const API_KEY = '08c6fb59f7c71d29805136fe34281282';
+
+
+async function getMovieGenres(movieId: number): Promise<number[]> {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener los géneros de la película ${movieId}. Código de estado: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Obtener los IDs de géneros de la película
+    const genres: number[] = data.genres.map((genre: any) => genre.id);
+
+    return genres;
+  } catch (error) {
+    throw new Error(`Error al obtener los géneros de la película ${movieId}: ${error}`);
   }
 }
 
 
-class MovieDB {
-    apiKey = "08c6fb59f7c71d29805136fe34281282";
-    movieDatabase: Movie[] = [];  
+interface Actor {
+  id: number;
+  name: string;
 
-    constructor(apiKey:string) {
-        this.apiKey = apiKey;
+}
+interface Gender {
+  id: number;
+  name: string;
+}
+
+async function getActorsByMovie(movieId: number): Promise<Actor[]> {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener los actores de la película ${movieId}. Código de estado: ${response.status}`);
     }
 
-    async fetchFromAPI(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-        throw new Error(`Error en la búsqueda de películas. Código de estado: ${response.status}`);
-        }
-        return await response.json();
-    }
+    const data = await response.json();
+
+  
+    const actors: Actor[] = data.cast.map((actor: any) => ({
+      id: actor.id,
+      name: actor.name,
+     
+    }));
+
+    return actors;
+  } catch (error) {
+    throw new Error(`Error al obtener los actores de la película ${movieId}: ${error}`);
+  }
+}
+
+
+async function getFavoriteGenres(movieIds: number[]): Promise<number[]> {
+  try {
+    const promises = movieIds.map(movieId => getMovieGenres(movieId));
+    const genresArrays = await Promise.all(promises);
+
+    const genres = Array.from(new Set(genresArrays.reduce((acc, val) => acc.concat(val), [])));
+
+    return genres;
+  } catch (error) {
+    throw new Error(`Error al obtener géneros de las películas favoritas: ${error}`);
+  }
+}
+
+
+async function getFavoriteActors(movieIds: number[]): Promise<number[]> {
+  try {
+    const promises = movieIds.map(movieId => getActorsByMovie(movieId));
+    const actorsArrays = await Promise.all(promises);
 
     
-
-    async searchMoviesByYear(year) {
-        const yearUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${this.apiKey}&primary_release_year=${year}`;
-        const yearData = await this.fetchFromAPI(yearUrl);
-
-        if (yearData.results && yearData.results.length > 0) {
-        return yearData.results;
-        } else {
-        throw new Error('No se encontraron películas para el año especificado.');
+    const actors = actorsArrays.reduce((acc, val) => {
+      val.forEach(actor => {
+        if (!acc.find(a => a.id === actor.id)) {
+          acc.push(actor);
         }
-    }
+      });
+      return acc;
+    }, []);
 
+    return actors.map(actor => actor.id);
+  } catch (error) {
+    throw new Error(`Error al obtener actores de las películas favoritas: ${error}`);
+  }
+}
+
+
+interface Movie {
+  id: number;
+  title: string;
+  genre_ids: any;
+  actorMatch: any;
+  genders: Gender[];
  
+}
 
-  async searchMoviesByYear_JO(year: number): Promise<void> {
+async function getMoviesByYear(year: number): Promise<Movie[]> {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&primary_release_year=${year}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener las películas del año ${year}. Código de estado: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    const movies: Movie[] = data.results.map((movie: any) => ({
+      id: movie.id,
+      title: movie.title,
+      genre_ids: movie.genre_ids
+     
+    }));
+
+    return movies;
+  } catch (error) {
+    throw new Error(`Error al obtener las películas del año ${year}: ${error}`);
+  }
+}
+
+
+async function obtenerGeneroPorId(id: number): Promise<Gender> {
+  const url = new URL(`https://api.themoviedb.org/3/genre/${id}`);
+  const params = {
+    api_key: API_KEY,
+    language: 'es-ES', 
+  };
+  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+
+  try {
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    let gender: Gender = {
+      id: data.id,
+      name: data.name
+    }
+    return gender;
+  } catch (error) {
+    console.error(`Error al obtener el género con ID ${id}:`, error);
+    throw error;
+  }
+}
+
+
+async function obtenerGenerosPorIds(ids: number[]): Promise<Gender[]> {
+  try {
+    const fetchPromises = ids.map(id => obtenerGeneroPorId(id));
+    const genres = await Promise.all(fetchPromises);
+    return genres;
+  } catch (error) {
+    console.error('Error al obtener los géneros:', error);
+    throw error;
+  }
+}
+
+
+
+// Función para obtener sugerencias de películas
+async function getSuggestedMovies(movieIds: number[]): Promise<Movie[]> {
+  const favoriteGenres = await getFavoriteGenres(movieIds);
+  const favoriteActors = await getFavoriteActors(movieIds);
+
+
+  const suggestions: Movie[] = [];
+  const currentYear = new Date().getFullYear();
+
+  for (let year = currentYear; year >= 1900 && suggestions.length < 10; year--) {
     try {
-        const yearMovies = await this.fetchFromAPI(`https://api.themoviedb.org/3/discover/movie?api_key=${this.apiKey}&primary_release_year=${year}`);
-        
-        if (yearMovies.results && yearMovies.results.length > 0) {
-            for (const movieData of yearMovies.results) {
-                const movie = new Movie(movieData.title, movieData.genres, movieData.actors);
-                this.movieDatabase.push(movie);
-            }
+    
+      let movies = await getMoviesByYear(year);
+      movies = movies.filter(movie => !movieIds.includes(movie.id));
+     
+      for (let movie of movies) {
+        if (suggestions.length >= 10) {
+          break; 
+        }      
+        const matchedGenres = movie.genre_ids.some(genre => favoriteGenres.includes(genre));
+        let matchedActors: boolean;
+        if (!matchedGenres) {
+         
+          const movieActors = await getActorsByMovie(movie.id);
+
+          let actor = movieActors.find(actor => favoriteActors.includes(actor.id));
+          matchedActors = actor !== undefined;
+          movie.actorMatch = actor;
+          }      
+        if (matchedGenres || matchedActors) {
+          movie.genders = await obtenerGenerosPorIds(movie.genre_ids);
+          suggestions.push(movie);
         }
-    } catch (error) {
-        console.error(`Error al buscar películas del año ${year}: ${error.message}`);
-    }
-}
-
-
-
-}
-
-
-class MovieRecommender {
-  private movieDatabase: Movie[];
-
-  constructor(movieDatabase: Movie[]) {
-      this.movieDatabase = movieDatabase;
-  }
-
-  public recommendMovies(userFavorites: Movie[]): Movie[] | undefined {
-      const recommendedMovies: Movie[] = [];
-      let count = 0; 
-      if (userFavorites.length === 0) { 
-          for (const movie of this.movieDatabase) {
-              if (count >= 10) {
-                  break; 
-              }
-              recommendedMovies.push(movie);    
-              count++;
-          }
-      } else {  
-          for (const userMovie of userFavorites) {
-              if (count >= 10) {
-                  break; 
-              }
-// usar el metodo movieDB.searchMoviesByYear(año) , los años comienzan desde el 2023 hasta el 1000    
-//esta guardado en movieDatabase 
-
-              for (const movie of this.movieDatabase) {      
-               
-                  const similarGenres = userMovie.genres.some(genre => movie.genres.includes(genre));
-
-
-                  // Verificamos la similitud de actores
-                  const similarActors = userMovie.actors.some(actor => movie.actors.includes(actor));
-
-               
-                  if ((similarGenres || similarActors) && !userFavorites.includes(movie)) {
-                      recommendedMovies.push(movie);
-                      count++; 5
-                      break;
-                  }
-              }
-          }
       }
-      console.log(`${recommendedMovies}`);
-     return recommendedMovies.length > 0 ? recommendedMovies : undefined;
-  }
-}
-
-
-
-
-
-// Crear una base de datos de películas (ejemplo)
-const movieDatabase: Movie[] = [
-  new Movie("Pelicula 1", ["Drama", "Accion"], ["BRAD PITT", "ANGELINA"]),
-  new Movie("Pelicula 2", ["Drama"], ["ANGELINA"]),
-  new Movie("Pelicula 3", ["Drama"], ["ANGELINA"]),
-  new Movie("Pelicula 4", ["TERROR"], ["ANGELINA"]),
-
-];
-
-
-
-const recommender = new MovieRecommender(movieDatabase);
-
-
-const userFavorites: Movie[] = [
-  new Movie("FAVORITA 1", ["Terror", "Scifi"], ["BRAD PITT"]),
-  new Movie("FAVORITA 2", ["Drama"], ["ANGELINA"]),
-  new Movie("FAVORITA 3", ["Drama"], ["ANGELINA"]),
-
-];
-
-
-const recommendedMovies = recommender.recommendMovies(userFavorites);
-
-if (recommendedMovies.length > 0) {
-  // Mostrar las películas recomendadas
-  console.log("Películas recomendadas:");
-  for (const movie of recommendedMovies) {
-      console.log(movie.title);
-  }
-} else {
-  console.log("No se han encontrado recomendaciones.");
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const movieDB = new MovieDB('08c6fb59f7c71d29805136fe34281282');
-///// AGREGUE ESTO
-
-//----------------
-const año = "2019"
-
-
-
-// Buscar películas del año 2019
-movieDB.searchMoviesByYear(año)
-  .then(movies => {
-    console.log(``);
-    console.log(`20 peliculas del año ${año}:`);
-    // Imprimir las primeras 20 películas
-    for (let i = 0; i < 20; i++) {
-      console.log(`${i+1}. ${movies[i].title}`);
+    } catch (error) {
+      console.error(`Error al obtener películas del año ${year}: ${error}`);
+      
     }
-    console.log(``);
-  })
-  .catch(error => {
-    console.error(`Error: ${error.message}`);
-  });
+  }
 
-// Buscar 3 peliculas en las que actue Brad Pitt
-const actor = 'Brad Pitt';
+  return suggestions;
+}
 
+// Uso de la función getSuggestedMovies con una lista de IDs de películas favoritas
+const favoriteMoviesIds = [19761, 753342, 84958, 475557];
 
-
- // const movieDB = new MovieDB('08c6fb59f7c71d29805136fe34281282');
-//  adult:false
-//  backdrop_path:'/r0kZNywAeN6Ar75rxDqLlTP5RiJ.jpg'
-//  genre_ids:(3) [80, 53, 18]
-//  id:475557
-//  original_language:'en'
-//  original_title:'Joker'
-//  overview:
-//  'During the 1980s, a failed stand-up comedian is driven insane and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic crime figure.'
-//  popularity:92.884
-//  poster_path:'/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg'
-//  release_date:'2019-10-01'
-//  title:'Joker'
-//  video:false
-//  vote_average:8.165
-//  vote_count:23667
-
-
+getSuggestedMovies(favoriteMoviesIds).then(suggestedMovies => {
+  const util = require('util')  
+  console.log('Películas sugeridas:', util.inspect(suggestedMovies, false, null, true /* enable colors */))  
+});
