@@ -20,3 +20,7 @@ npm run dev
 
 Instalar PostgreSQL:
 https://youtu.be/cHGaDfzJyY4?si=pOE0lOT4zDN-pEUn
+
+
+Doc de api:
+https://developer.themoviedb.org/reference/account-rated-movies
