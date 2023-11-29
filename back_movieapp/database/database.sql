@@ -24,6 +24,16 @@ CREATE TABLE user_movie (
     status INT DEFAULT 1 CHECK (status IN (0, 1))
 );
 
+DROP TABLE IF EXISTS rated_movie;
+CREATE TABLE rated_movie (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) NOT NULL,
+    movie_id INTEGER NOT NULL,
+    liked INT CHECK (liked IN (0, 1)) NOT NULL,
+    created TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    status INT DEFAULT 1 CHECK (status IN (0, 1))  NOT NULL
+);
+
 insert into
     users (email, password)
 values

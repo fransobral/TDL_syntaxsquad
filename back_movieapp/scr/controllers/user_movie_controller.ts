@@ -22,7 +22,7 @@ export const getUserMovieId = async (req: Request, res: Response): Promise<Respo
     try {
         const id = parseInt(req.params.id);
         const response: QueryResult = await pool.query('select * from user_movie where id = $1', [id]);
-        return res.status(200).json(response.rows);
+        return res.status(200).json(response.rows[0]);
     } catch (error) {
         return printError(error, res);
     }
