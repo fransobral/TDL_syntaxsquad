@@ -53,6 +53,20 @@ class MovieDB {
         }
     }
 
+    async printMoviesByActor(actorName: string): Promise<void> {
+        try {
+            const movies = await this.searchMoviesByActor(actorName);
+            console.log(`Las 10 primeras películas en las que aparece ${actorName}:`);
+            const firstTenMovies = movies.slice(0, 10);
+            firstTenMovies.forEach((movie, index) => {
+                console.log(`${index + 1}. ${movie.title}`);
+            });
+            console.log('');
+        } catch (error) {
+            console.error(`Error: ${error.message}`);
+        }
+    }
+
     async searchMoviesByYear(year) {
         const yearUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${this.apiKey}&primary_release_year=${year}`;
         const yearData = await this.fetchFromAPI(yearUrl);
@@ -61,6 +75,19 @@ class MovieDB {
         return yearData.results;
         } else {
         throw new Error('No se encontraron películas para el año especificado.');
+        }
+    }
+
+    async printMoviesByYear(year: string): Promise<void> {
+        try {
+            const movies = await this.searchMoviesByYear(year);
+            console.log(`Películas del año ${year}:`);
+            movies.forEach((movie, index) => {
+                console.log(`${index + 1}. ${movie.title}`);
+            });
+            console.log('');
+        } catch (error) {
+            console.error(`Error: ${error.message}`);
         }
     }
 
@@ -96,7 +123,20 @@ class MovieDB {
       }
   }
 
-async searchTopMoviesByActor(actorName: string): Promise<any[]> {
+  async printTopMoviesByGenre(genreId) {
+    try {
+        const movies = await this.searchTopMoviesByGenre(genreId);
+        console.log(`Top 10 de películas del género con ID ${genreId} según IMDB:`);
+        movies.forEach((movie, index) => {
+            console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
+        });
+        console.log('');
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+    }
+}
+
+    async searchTopMoviesByActor(actorName: string): Promise<any[]> {
     try {
         const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${this.apiKey}&query=${encodeURI(actorName)}`;
         const actorData = await this.fetchFromAPI(actorUrl);
@@ -123,7 +163,7 @@ async searchTopMoviesByActor(actorName: string): Promise<any[]> {
 }
 
     
-async printTopMoviesByActor(actorName: string): Promise<void> {
+    async printTopMoviesByActor(actorName: string): Promise<void> {
         try {
             const movies = await this.searchTopMoviesByActor(actorName);
             console.log(`Top 10 de películas de ${actorName} ordenadas por rating:`);
@@ -136,7 +176,7 @@ async printTopMoviesByActor(actorName: string): Promise<void> {
         }
     }
 
-async searchTopMoviesByNationality(nationality) {
+    async searchTopMoviesByNationality(nationality) {
     const nationalityUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${this.apiKey}&region=${nationality}`;
     const nationalityData = await this.fetchFromAPI(nationalityUrl);
 
@@ -147,7 +187,20 @@ async searchTopMoviesByNationality(nationality) {
     }
 }
 
-async searchTopMoviesByYear(year) {
+    async printTopMoviesByNationality(nationality: string): Promise<void> {
+    try {
+        const movies = await this.searchTopMoviesByNationality(nationality);
+        console.log(`Top 10 de películas de nacionalidad ${nationality} ordenadas por rating:`);
+        movies.forEach((movie, index) => {
+            console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
+        });
+        console.log('');
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+    }
+}
+
+    async searchTopMoviesByYear(year) {
     const yearUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${this.apiKey}&primary_release_year=${year}`;
     const yearData = await this.fetchFromAPI(yearUrl);
 
@@ -157,82 +210,38 @@ async searchTopMoviesByYear(year) {
         throw new Error('No se encontraron películas para el año especificado.');
     }
 }
+
+    async printTopMoviesByYear(year: string): Promise<void> {
+    try {
+        const movies = await this.searchTopMoviesByYear(year);
+        console.log(`Top 10 de películas del año ${year} ordenadas por rating:`);
+        movies.forEach((movie, index) => {
+            console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
+        });
+        console.log('');
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+    }
+}
   
 }
 
 const movieDB = new MovieDB('08c6fb59f7c71d29805136fe34281282');
 
 const año = "2019"
-
 // Buscar películas del año 2019
-movieDB.searchMoviesByYear(año)
-  .then(movies => {
-    console.log(``);
-    console.log(`20 peliculas del año ${año}:`);
-    // Imprimir las primeras 20 películas
-    for (let i = 0; i < 20; i++) {
-      console.log(`${i+1}. ${movies[i].title}`);
-    }
-    console.log(``);
-  })
-  .catch(error => {
-    console.error(`Error: ${error.message}`);
-  });
+movieDB.printMoviesByYear(año)
 
 // Buscar peliculas en las que actue Will Smith
 const actor = 'Will Smith';
+movieDB.printMoviesByActor(actor)
 
-movieDB.searchMoviesByActor(actor)
-  .then(movies => {
-    console.log(``);
-    console.log(`Las películas en las que aparece ${actor} son:`);
-    // Imprimir las primeras 3 películas
-    for (let i = 0; i < 10; i++) {
-      console.log(`${i+1}. ${movies[i].title}`);
-    }
-    console.log(``);
-  })
-  .catch(error => {
-    console.error(`Error: ${error.message}`);
-  });
-
-  const genreIdCienciaFiccion = 878;
-
-movieDB.searchTopMoviesByGenre(genreIdCienciaFiccion)
-      .then(movies => {
-          console.log(`Top 10 de películas de Ciencia Ficción segun IMBD:`);
-          movies.forEach((movie, index) => {
-              console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
-          });
-          console.log('');
-      })
-      .catch(error => {
-          console.error(`Error: ${error.message}`);
-      });
-  
+const genreIdCienciaFiccion = 878;
+movieDB.printTopMoviesByGenre(genreIdCienciaFiccion)
+      
 movieDB.printTopMoviesByActor(actor)
 
 const nationality = 'US';
-movieDB.searchTopMoviesByNationality(nationality)
-    .then(movies => {
-        console.log(`Top 10 de películas de nacionalidad ${nationality} ordenadas por rating:`);
-        movies.forEach((movie, index) => {
-            console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
-        });
-        console.log('');
-    })
-    .catch(error => {
-        console.error(`Error: ${error.message}`);
-    });
+movieDB.printTopMoviesByNationality(nationality)
 
-movieDB.searchTopMoviesByYear(año)
-.then(movies => {
-    console.log(`Top 10 de películas del año ${año} ordenadas por rating:`);
-    movies.forEach((movie, index) => {
-        console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
-    });
-    console.log('');
-})
-.catch(error => {
-    console.error(`Error: ${error.message}`);
-});
+movieDB.printTopMoviesByYear(año)
