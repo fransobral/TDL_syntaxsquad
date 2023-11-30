@@ -29,14 +29,27 @@ class MovieDB {
         }
     }
 
-    async searchMoviesByActor(actorName) {
-        const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${this.apiKey}&query=${encodeURI(actorName)}`;
-        const actorData = await this.fetchFromAPI(actorUrl);
+    async searchMoviesByActor(actorName: string): Promise<any[]> {
+        try {
+            const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${this.apiKey}&query=${encodeURI(actorName)}`;
+            const actorData = await this.fetchFromAPI(actorUrl);
 
-        if (actorData.results && actorData.results.length > 0) {
-        return actorData.results[0].known_for;
-        } else {
-        throw new Error('No se encontraron películas para el actor especificado.');
+            if (actorData.results && actorData.results.length > 0) {
+                const actorId = actorData.results[0].id;
+
+                const moviesUrl = `https://api.themoviedb.org/3/person/${actorId}/movie_credits?api_key=${this.apiKey}`;
+                const moviesData = await this.fetchFromAPI(moviesUrl);
+
+                if (moviesData.cast && moviesData.cast.length > 0) {
+                    return moviesData.cast;
+                } else {
+                    throw new Error('No se encontraron películas para el actor especificado.');
+                }
+            } else {
+                throw new Error('Actor no encontrado.');
+            }
+        } catch (error) {
+            throw new Error(`Error al buscar películas por actor: ${error.message}`);
         }
     }
 
@@ -83,17 +96,45 @@ class MovieDB {
       }
   }
 
-  async searchTopMoviesByActor(actorName) {
-    const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${this.apiKey}&query=${encodeURI(actorName)}`;
-    const actorData = await this.fetchFromAPI(actorUrl);
+async searchTopMoviesByActor(actorName: string): Promise<any[]> {
+    try {
+        const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${this.apiKey}&query=${encodeURI(actorName)}`;
+        const actorData = await this.fetchFromAPI(actorUrl);
 
-    if (actorData.results && actorData.results.length > 0) {
-        const movies = actorData.results[0].known_for.slice(0, 10);
-        return movies.sort((a, b) => b.vote_average - a.vote_average); // Ordenar por rating (descendente)
-    } else {
-        throw new Error('No se encontraron películas para el actor especificado.');
+        if (actorData.results && actorData.results.length > 0) {
+            const actorId = actorData.results[0].id;
+            const actorMoviesUrl = `https://api.themoviedb.org/3/person/${actorId}/movie_credits?api_key=${this.apiKey}`;
+            const moviesData = await this.fetchFromAPI(actorMoviesUrl);
+
+            if (moviesData.cast && moviesData.cast.length > 0) {
+                const movies = moviesData.cast.slice(0, 10);
+                const sortedMovies = movies.sort((a, b) => b.vote_average - a.vote_average);
+                return sortedMovies;
+            } else {
+                throw new Error('No se encontraron películas para el actor especificado.');
+            }
+        } else {
+            throw new Error('Actor no encontrado.');
+        }
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+        return []; // Devolver un array vacío en caso de error
     }
 }
+
+    
+async printTopMoviesByActor(actorName: string): Promise<void> {
+        try {
+            const movies = await this.searchTopMoviesByActor(actorName);
+            console.log(`Top 10 de películas de ${actorName} ordenadas por rating:`);
+            movies.forEach((movie, index) => {
+                console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
+            });
+            console.log('');
+        } catch (error) {
+            console.error(`Error: ${error.message}`);
+        }
+    }
 
 async searchTopMoviesByNationality(nationality) {
     const nationalityUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${this.apiKey}&region=${nationality}`;
@@ -138,15 +179,15 @@ movieDB.searchMoviesByYear(año)
     console.error(`Error: ${error.message}`);
   });
 
-// Buscar 3 peliculas en las que actue Margot Robbie
-const actor = 'Margot Robbie';
+// Buscar peliculas en las que actue Will Smith
+const actor = 'Will Smith';
 
 movieDB.searchMoviesByActor(actor)
   .then(movies => {
     console.log(``);
     console.log(`Las películas en las que aparece ${actor} son:`);
     // Imprimir las primeras 3 películas
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       console.log(`${i+1}. ${movies[i].title}`);
     }
     console.log(``);
@@ -157,7 +198,7 @@ movieDB.searchMoviesByActor(actor)
 
   const genreIdCienciaFiccion = 878;
 
-  movieDB.searchTopMoviesByGenre(genreIdCienciaFiccion)
+movieDB.searchTopMoviesByGenre(genreIdCienciaFiccion)
       .then(movies => {
           console.log(`Top 10 de películas de Ciencia Ficción segun IMBD:`);
           movies.forEach((movie, index) => {
@@ -169,17 +210,7 @@ movieDB.searchMoviesByActor(actor)
           console.error(`Error: ${error.message}`);
       });
   
-movieDB.searchTopMoviesByActor(actor)
-.then(movies => {
-    console.log(`Top 10 de películas de ${actor} ordenadas por rating:`);
-    movies.forEach((movie, index) => {
-        console.log(`${index + 1}. ${movie.title} - Rating: ${movie.vote_average}`);
-    });
-    console.log('');
-})
-.catch(error => {
-    console.error(`Error: ${error.message}`);
-});
+movieDB.printTopMoviesByActor(actor)
 
 const nationality = 'US';
 movieDB.searchTopMoviesByNationality(nationality)
