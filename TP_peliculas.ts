@@ -14,21 +14,6 @@ class MovieDB {
         return await response.json();
     }
 
-    async searchMovieByName(movieName) {
-        const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${this.apiKey}&query=${encodeURI(movieName)}`;
-        const searchData = await this.fetchFromAPI(searchUrl);
-
-        if (searchData.results && searchData.results.length > 0) {
-        const firstMovie = searchData.results[0];
-        const movieId = firstMovie.id;
-
-        const movieUrl = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${this.apiKey}`;
-        return await this.fetchFromAPI(movieUrl);
-        } else {
-        throw new Error('No se encontraron resultados para la película.');
-        }
-    }
-
     async searchMoviesByActor(actorName: string): Promise<any[]> {
         try {
             const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${this.apiKey}&query=${encodeURI(actorName)}`;
