@@ -4,6 +4,7 @@ import userMovieRoutes from './Routes/user_movie';
 import moviesRoutes from './Routes/movies';
 import ratedMovieRoutes from './Routes/rated_movie';
 import recommendationRoute from './Routes/recommendation';
+import loginRoute from './Routes/authService';
 
 const app = express();
 const port = 3000
@@ -17,6 +18,7 @@ app.use(userMovieRoutes);
 app.use(moviesRoutes);
 app.use(ratedMovieRoutes);
 app.use(recommendationRoute);
+app.use(loginRoute);
 
 app.listen(port, () => {
 console.log('\nProyecto up !\nPuerto:' + port + "\n")
