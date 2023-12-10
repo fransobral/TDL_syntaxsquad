@@ -17,6 +17,8 @@ npm install --save-dev concurrently
 Levantar proyecto:
 npm run dev
 
+Swagger:
+http://localhost:3000/api-doc/
 
 Instalar PostgreSQL:
 https://youtu.be/cHGaDfzJyY4?si=pOE0lOT4zDN-pEUn

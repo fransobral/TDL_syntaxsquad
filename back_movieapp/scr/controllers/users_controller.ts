@@ -9,9 +9,11 @@ function printError(error: unknown, res: Response<any, Record<string, any>>) {
     return res.status(500).json('Internal Server Error.')
 }
 
+
+
 export const getUsers = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const response: QueryResult = await pool.query('select * from users order by id asc');
+        const response: QueryResult = await pool.query('select id, email, created from users where status = 1 order by id asc');
         return res.status(200).json(response.rows);
     } catch (error) {
         return printError(error, res);
@@ -21,7 +23,7 @@ export const getUsers = async (req: Request, res: Response): Promise<Response> =
 export const getUserById = async (req: Request, res: Response): Promise<Response> => {
     try {
         const id = parseInt(req.params.id);
-        const response: QueryResult = await pool.query('select * from users where id = $1', [id]);
+        const response: QueryResult = await pool.query('select id, email, created from users where status = 1 and id = $1', [id]);
         return res.status(200).json(response.rows[0]);
     } catch (error) {
         return printError(error, res);
@@ -35,7 +37,7 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
 
         if (email == undefined || password == undefined) return res.status(500).json("Internal Server Error. Email and password must be submitted to apply the update.");
 
-        const response: QueryResult = await pool.query('update users set email = $1, password = $2 where id = $3', [email, password, id]);
+        const response: QueryResult = await pool.query('update users set email = $1, password = $2 where status = 1 and id = $3', [email, password, id]);
         if (response.rowCount == 0) return res.status(500).json(`The record does not exist in the database`);
 
         return res.status(200).json(`User ${id} update Successfully`);
@@ -47,7 +49,7 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
 export const deleteUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const id = parseInt(req.params.id);
-        const response: QueryResult = await pool.query('update users set status = 0 where id = $1', [id]);
+        const response: QueryResult = await pool.query('update users set status = 0 where status = 1 and id = $1', [id]);
 
         if (response.rowCount == 0) return res.status(500).json(`The record does not exist in the database`);
 
@@ -60,7 +62,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { email, password } = req.body;
-        const response: QueryResult = await pool.query('select * from users where status = 1 and email = $1', [email]);
+        const response: QueryResult = await pool.query('select id, email, created from users where status = 1 and email = $1', [email]);
         if (response.rowCount != 0) return res.status(500).json('Internal Server Error. There is an account with that email.');
         await pool.query('insert into users (email, password) values ($1, $2)', [email, password]);
 
