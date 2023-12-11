@@ -37,6 +37,9 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
 
         if (email == undefined || password == undefined) return res.status(500).json("Internal Server Error. Email and password must be submitted to apply the update.");
 
+        const otherUser: QueryResult = await pool.query('select * from users where status = 1 and email = $1 and id != $2', [email, id]);
+        if (otherUser.rowCount != 0) return res.status(500).json(`There is another user with email`);
+
         const response: QueryResult = await pool.query('update users set email = $1, password = $2 where status = 1 and id = $3', [email, password, id]);
         if (response.rowCount == 0) return res.status(500).json(`The record does not exist in the database`);
 

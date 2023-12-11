@@ -7,7 +7,8 @@ import recommendationRoute from './Routes/recommendation';
 import loginRoute from './Routes/authService';
 
 const app = express();
-const port = 3000
+const port = 3000;
+const domain = "http://localhost:" + port;
 
 const path = require("path");
 
@@ -22,7 +23,7 @@ const swaggerSpec = {
         },
         servers: [
             {
-                url: "http://localhost:" + port
+                url: domain
             }
         ]
     },
@@ -32,7 +33,7 @@ const swaggerSpec = {
 app.use(express.json()); // Permite convertir los datos que lleguen a formato json
 app.use(express.urlencoded({ extended: false })); // Si se envia los datos de un form, permite convertirlo en formato json
 
-app.use("/api-doc",swaggerUI.serve, swaggerUI.setup(swaggerJSDoc(swaggerSpec)));
+app.use("/api-doc", swaggerUI.serve, swaggerUI.setup(swaggerJSDoc(swaggerSpec)));
 
 app.use('/api', usersRoutes);
 app.use('/api', userMovieRoutes);
@@ -42,5 +43,6 @@ app.use('/api', recommendationRoute);
 app.use('/api', loginRoute);
 
 app.listen(port, () => {
-    console.log('\nProyecto up !\nPuerto:' + port + "\n")
+    console.log('\nProyecto up !\nPuerto:' + port + "\n");
+    console.log("Go to: " + domain + "/api-doc")
 })

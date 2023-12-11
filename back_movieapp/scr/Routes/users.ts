@@ -12,16 +12,12 @@ const router = Router();
  *      properties:
  *          email:
  *              type: string
- *              description: the user email
  *          password:
  *              type: string
- *              description: the user password
  *          created:
  *              type: date
- *              description: the user created
  *          status:
  *              type: int
- *              description: the user status
  *      required:
  *          - email
  *          - password
@@ -34,7 +30,7 @@ const router = Router();
  * @swagger
  * /api/users:
  *     get:
- *      summary: return all users
+ *      summary: Return all users
  *      tags: [User]
  *      responses:
  *          200:
@@ -53,7 +49,7 @@ router.get('/users', getUsers);
  * @swagger
  * /api/users/{id}:
  *     get:
- *      summary: return a user
+ *      summary: Return a user
  *      tags: [User]
  *      parameters:
  *          - in: path
@@ -80,7 +76,7 @@ router.get('/users/:id', getUserById);
  * @swagger
  * /api/users:
  *     post:
- *      summary: created new user
+ *      summary: Created new user
  *      tags: [User]
  *      requestBody:
  *         required: true
@@ -99,7 +95,7 @@ router.post('/users', createUser);
  * @swagger
  * /api/users/{id}:
  *     put:
- *      summary: update a user
+ *      summary: Update a user
  *      tags: [User]
  *      requestBody:
  *         required: true
@@ -127,7 +123,7 @@ router.put('/users/:id', updateUser);
  * @swagger
  * /api/users/{id}:
  *     delete:
- *      summary: delete a user
+ *      summary: Delete a user
  *      tags: [User]
  *      parameters:
  *          - in: path

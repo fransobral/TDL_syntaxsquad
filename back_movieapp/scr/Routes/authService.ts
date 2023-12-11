@@ -5,8 +5,43 @@ import {
 
 const router = Router();
 
-router.get('/Login', loginEndpoint);
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *     Login:
+ *      type: object
+ *      properties:
+ *          userName:
+ *              type: string
+ *          password:
+ *              type: string
+ *      required:
+ *          - userName
+ *          - password
+ */
 
-
+/**
+ * @swagger
+ * /api/Login/:
+ *     post:
+ *      summary: log in | Get token
+ *      tags: [Login]
+ *      requestBody:
+ *         required: true
+ *         content:
+ *             application/json:
+ *                 schema:
+ *                    type: object
+ *                    $ref: '#/components/schemas/Login'
+ *      responses:
+ *          200:
+ *              description: login successful
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ */
+router.post('/Login', loginEndpoint);
 
 export default router;
