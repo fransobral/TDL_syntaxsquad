@@ -10,7 +10,7 @@ function printError(error: unknown, res: Response<any, Record<string, any>>) {
     return res.status(500).json('Internal Server Error.')
 }
 
-async function fetchFromAPI(url: RequestInfo) {
+async function fetchFromAPI(url: string | URL | globalThis.Request) {
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Error en la búsqueda de películas. Código de estado: ${response.status}`);
