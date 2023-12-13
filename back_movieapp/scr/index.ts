@@ -25,8 +25,22 @@ const swaggerSpec = {
             {
                 url: domain
             }
+        ],components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT" 
+                }
+            }
+        },
+        security: [
+            {
+                bearerAuth: [] // Nombre del esquema de seguridad que definiste arriba
+            }
         ]
     },
+
     apis: [`${path.join(__dirname, "./Routes/*.js")}`]
 };
 

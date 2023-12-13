@@ -179,7 +179,7 @@ async function obtenerGenerosPorIds(ids: number[]): Promise<Gender[]> {
 
 
 // Función para obtener sugerencias de películas
-async function getSuggestedMovies(movieIds: number[]): Promise<Movie[]> {
+async function getSuggestedMovies(movieIds: number[], recommendationQuantity: number): Promise<Movie[]> {
     const favoriteGenres = await getFavoriteGenres(movieIds);
     const favoriteActors = await getFavoriteActors(movieIds);
 
@@ -187,14 +187,14 @@ async function getSuggestedMovies(movieIds: number[]): Promise<Movie[]> {
     const suggestions: Movie[] = [];
     const currentYear = new Date().getFullYear();
 
-    for (let year = currentYear; year >= 1900 && suggestions.length < 10; year--) {
+    for (let year = currentYear; year >= 1900 && suggestions.length < recommendationQuantity; year--) {
         try {
 
             let movies = await getMoviesByYear(year);
             movies = movies.filter(movie => !movieIds.includes(movie.id));
 
             for (let movie of movies) {
-                if (suggestions.length >= 10) {
+                if (suggestions.length >= recommendationQuantity) {
                     break;
                 }
                 const matchedGenres = movie.genre_ids.some(genre => favoriteGenres.includes(genre));
@@ -227,18 +227,14 @@ async function getSuggestedMovies(movieIds: number[]): Promise<Movie[]> {
 
 export const getRecommendedMovies = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const userId = parseInt(req.params.userId);
-        const responseUser: QueryResult = await pool.query('SELECT * FROM users where id = $1', [userId]);
+        const recommendationQuantity = parseInt(req.query.recommendationQuantity as string ?? 10);
 
-        if ((responseUser.rowCount ?? 0) === 0) {
-            return res.status(200).json({ mensaje: "El usuario: " + userId + " no se encuentra registrado en la base de datos" });
-        }
-        const response: QueryResult = await pool.query('SELECT movie_id FROM public.user_movie WHERE user_id=$1', [userId]);
+        const response: QueryResult = await pool.query('SELECT movie_id FROM public.user_movie WHERE user_id=$1', [req.usuario?.userId]);
 
         if ((response.rowCount ?? 0) > 0) {
             const favoriteMoviesIds = response.rows.map(x => x.movie_id);
 
-            let recommendations = await getSuggestedMovies(favoriteMoviesIds);
+            let recommendations = await getSuggestedMovies(favoriteMoviesIds, recommendationQuantity);
 
             const transformedRecommendations = recommendations.map(movie => {
                 const genders = movie.genre_ids.map(genreId => {
@@ -267,7 +263,7 @@ export const getRecommendedMovies = async (req: Request, res: Response): Promise
 
             return res.status(200).json(transformedMoviesWithActors);
         } else {
-            const result = await getTopMoviesForEachGenre();
+            const result = await getTopMoviesForEachGenre(recommendationQuantity);
             return res.status(200).json(result);
         }
 
@@ -300,9 +296,9 @@ async function getTopMoviesByGenre(genreId: number, moviesAlreadyAdded: number[]
 
     return topMovies;
 }
-
+// falta implementar recommendationQuantity 
 // Obtener las dos películas principales por género para todos los géneros sin repeticiones
-async function getTopMoviesForEachGenre() {
+async function getTopMoviesForEachGenre(recommendationQuantity: number) {
     try {
         let genres = [
             { id: 35, name: "Comedy" },
@@ -320,7 +316,7 @@ async function getTopMoviesForEachGenre() {
 
             results.push({ genre: genre.name, topMovies });
         }
-       // console.log("results", results)
+
         const enrichResult = await enrichMoviesWithDetails(results);
 
         return enrichResult;
@@ -384,21 +380,16 @@ async function getMovieDetails(movieId: number): Promise<any> {
 
 export const getRecommendationsByYears = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const userId = parseInt(req.params.userId);
-
-        const responseUser: QueryResult = await pool.query('SELECT * FROM users where id = $1', [userId]);
-
-        if ((responseUser.rowCount ?? 0) === 0) {
-            return res.status(200).json({ mensaje: "El usuario: " + userId + " no se encuentra registrado en la base de datos" });
-        }
-        const response: QueryResult = await pool.query('SELECT movie_id FROM public.user_movie WHERE user_id=$1', [userId]);
+        const recommendationQuantity = parseInt(req.query.recommendationQuantity as string ?? 10);
+        console.log("recommendationQuantity",recommendationQuantity)
+        const response: QueryResult = await pool.query('SELECT movie_id FROM public.user_movie WHERE user_id=$1', [req.usuario?.userId]);
 
         if ((response.rowCount ?? 0) > 0) {
 
-            const resultRec = await recomendacionPorAnioDeFavoritos(response.rows.map(x => x.movie_id));
+            const resultRec = await recomendacionPorAnioDeFavoritos(response.rows.map(x => x.movie_id), recommendationQuantity);
             return res.status(200).json(resultRec);
         } else {
-            const result = await getTopMoviesForEachGenre();
+            const result = await getTopMoviesForEachGenre(recommendationQuantity);
             return res.status(200).json(result);
         }
 
@@ -479,7 +470,7 @@ async function getMovieInfo(movieId: number): Promise<MovieYear> {
     }
 }
 
-async function recomendacionPorAnioDeFavoritos(ids: number[]): Promise<any[]> {
+async function recomendacionPorAnioDeFavoritos(ids: number[], recommendationQuantity: number): Promise<any[]> {
 
     const favoriteMovies = await getMoviesInfoParallel(ids);
 
@@ -490,13 +481,13 @@ async function recomendacionPorAnioDeFavoritos(ids: number[]): Promise<any[]> {
 
     const totalFavoriteMovies = favoriteMovies.length;
     const percentages: { [key: number]: number } = {};
-  
+
     for (const year in yearsMap) {
         percentages[year] = (yearsMap[year] / totalFavoriteMovies) * 100;
     }
-  
-    const totalMovies = 10; // Total de películas recomendadas
-  
+
+    const totalMovies = recommendationQuantity; // Total de películas recomendadas
+
 
 
     const movieCounts: Recommendation[] = [];
@@ -524,7 +515,7 @@ async function recomendacionPorAnioDeFavoritos(ids: number[]): Promise<any[]> {
     // Calculando la suma total actual de las recomendaciones
     const totalCurrentRecommendations = movieCounts.reduce((total, movie) => total + movie.recoCount, 0);
 
-    const diff = 10 - totalCurrentRecommendations;
+    const diff = recommendationQuantity - totalCurrentRecommendations;
     movieCounts[maxIndex].recoCount += diff;
 
     const result = await recommendMovies(movieCounts);
