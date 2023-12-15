@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { createUser, deleteUser, getUserById, getUsers, updateUser } from '../controllers/users_controller'
+import { verificarToken } from "../controllers/authService_controller";
 
 const router = Router();
 
@@ -42,7 +43,7 @@ const router = Router();
  *                          items:
  *                              $ref: '#/components/schemas/User'
  */
-router.get('/users', getUsers);
+router.get('/users', verificarToken, getUsers);
 
 
 /**
@@ -70,7 +71,7 @@ router.get('/users', getUsers);
  *          404:
  *              description: user not found
  */
-router.get('/users/:id', getUserById);
+router.get('/users/:id', verificarToken, getUserById);
 
 /**
  * @swagger
@@ -89,7 +90,7 @@ router.get('/users/:id', getUserById);
  *          200:
  *             description: new user created!
  */
-router.post('/users', createUser);
+router.post('/users', verificarToken, createUser);
 
 /**
  * @swagger
@@ -117,7 +118,7 @@ router.post('/users', createUser);
  *          404:
  *              description: user not found
  */
-router.put('/users/:id', updateUser);
+router.put('/users/:id', verificarToken, updateUser);
 
 /**
  * @swagger
@@ -138,6 +139,6 @@ router.put('/users/:id', updateUser);
  *          404:
  *              description: user not found
  */
-router.delete('/users/:id', deleteUser);
+router.delete('/users/:id', verificarToken, deleteUser);
 
 export default router;

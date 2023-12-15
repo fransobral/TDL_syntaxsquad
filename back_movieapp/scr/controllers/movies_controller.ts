@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { RequestInfo } from 'undici-types';
 
 const apiKey = "08c6fb59f7c71d29805136fe34281282";
 
@@ -20,10 +19,11 @@ async function fetchFromAPI(url: string | URL | globalThis.Request) {
 
 export const getMovieByName = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { name } = req.body;
-        if (name == undefined || name.trim() == "") return res.status(500).json("The expected 'name' parameter was not received.");
+        const { name } = req.query;
 
-        const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURI(name.trim())}`;
+        if (name == undefined ) return res.status(500).json("The expected 'name' parameter was not received.");
+
+        const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURI(name.toString())}`;
         const searchData = await fetchFromAPI(searchUrl);
 
         if (!searchData.results || searchData.results.length < 1) return res.status(500).json('No results found for the movie.');
@@ -42,10 +42,10 @@ export const getMovieByName = async (req: Request, res: Response): Promise<Respo
 
 export const getMoviesByActor = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { name } = req.body;
-        if (name == undefined || name.trim() == "") return res.status(500).json("The expected 'name' parameter was not received.");
+        const { name } = req.query;
+        if (name == undefined) return res.status(500).json("The expected 'name' parameter was not received.");
 
-        const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&query=${encodeURI(name.trim())}`;
+        const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&query=${encodeURI(name.toString())}`;
         const actorData = await fetchFromAPI(actorUrl);
 
         if (!actorData.results || actorData.results.length < 1) return res.status(500).json('No results found for the movie.');
@@ -58,15 +58,15 @@ export const getMoviesByActor = async (req: Request, res: Response): Promise<Res
 
 export const getTopMoviesByActor = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { name, top } = req.body;
-        if (name == undefined || name.trim() == "" || top == undefined || top !== true) return res.status(500).json("The expected 'name' parameter was not received.");
+        const { name, top } = req.query;
+        if (name == undefined || top == undefined) return res.status(500).json("The expected 'name' parameter was not received.");
 
-        const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&query=${encodeURI(name.trim())}`;
+        const actorUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&query=${encodeURI(name.toString())}`;
         const actorData = await fetchFromAPI(actorUrl);
 
         if (!actorData.results || actorData.results.length < 1) return res.status(500).json('No results found for the movie.');
 
-        const movies = actorData.results[0].known_for.slice(0, 10);
+        const movies = actorData.results[0].known_for.slice(0, top);
 
         return res.status(200).json(movies.sort((a: { vote_average: number; }, b: { vote_average: number; }) => b.vote_average - a.vote_average));
     } catch (error) {
@@ -76,13 +76,13 @@ export const getTopMoviesByActor = async (req: Request, res: Response): Promise<
 
 export const getMoviesByYear = async (req: Request, res: Response): Promise<Response> => {
     try {
-        let { year } = req.body;
-        if (year == undefined || year.trim() == "") return res.status(500).json("The expected 'year' parameter was not received.");
+        let { year } = req.query;
+        if (year == undefined) return res.status(500).json("The expected 'year' parameter was not received.");
 
-        year = Number(year.trim());
-        if (isNaN(year) || !Number.isInteger(year)) return res.status(500).json("Parameter 'year' does not contain valid data.");
+        let nyear = Number(year);
+        if (isNaN(nyear) || !Number.isInteger(nyear)) return res.status(500).json("Parameter 'year' does not contain valid data.");
 
-        const yearUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&primary_release_year=${year}`;
+        const yearUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&primary_release_year=${nyear}`;
         const yearData = await fetchFromAPI(yearUrl);
 
         if (!yearData.results || yearData.results.length < 1) return res.status(500).json('No results found for the movie.');
@@ -95,15 +95,15 @@ export const getMoviesByYear = async (req: Request, res: Response): Promise<Resp
 
 export const getTopMoviesByYear = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { year, top } = req.body;
-        if (year == undefined || year.trim() == "" || top == undefined || top !== true) return res.status(500).json("The expected 'year' and/or 'top' parameters were not received.");
+        const { year, top } = req.query;
+        if (year == undefined || top == undefined) return res.status(500).json("The expected 'year' and/or 'top' parameters were not received.");
 
         const yearUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&primary_release_year=${year}`;
         const yearData = await fetchFromAPI(yearUrl);
 
         if (!yearData.results || yearData.results.length < 1) return res.status(500).json('No results found for the movie.');
 
-        return res.status(200).json(yearData.results.slice(0, 10).sort((a: { vote_average: number; }, b: { vote_average: number; }) => b.vote_average - a.vote_average));
+        return res.status(200).json(yearData.results.slice(0, top).sort((a: { vote_average: number; }, b: { vote_average: number; }) => b.vote_average - a.vote_average));
     } catch (error) {
         return printError(error, res);
     }
@@ -111,10 +111,10 @@ export const getTopMoviesByYear = async (req: Request, res: Response): Promise<R
 
 export const getMoviesByNationality = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { nationality } = req.body;
-        if (nationality == undefined || nationality.trim() == "") return res.status(500).json("The expected 'nationality' parameter was not received.");
+        const { nationality } = req.query;
+        if (nationality == undefined) return res.status(500).json("The expected 'nationality' parameter was not received.");
 
-        const nationalityUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&region=${nationality.trim()}`;
+        const nationalityUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&region=${nationality.toString()}`;
         const nationalityData = await fetchFromAPI(nationalityUrl);
 
         if (!nationalityData.results || nationalityData.results.length < 1) return res.status(500).json('No results found for the movie.');
@@ -128,15 +128,15 @@ export const getMoviesByNationality = async (req: Request, res: Response): Promi
 
 export const getTopMoviesByNationality = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { nationality, top } = req.body;
-        if (nationality == undefined || nationality.trim() == "" || top == undefined || top !== true) return res.status(500).json("The expected 'nationality' and/or 'top' parameters were not received.");
+        const { nationality, top } = req.query;
+        if (nationality == undefined || top == undefined ) return res.status(500).json("The expected 'nationality' and/or 'top' parameters were not received.");
 
         const nationalityUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&region=${nationality}`;
         const nationalityData = await fetchFromAPI(nationalityUrl);
 
         if (!nationalityData.results || nationalityData.results.length < 1) return res.status(500).json('No results found for the movie.');
 
-        return res.status(200).json(nationalityData.results.slice(0, 10).sort((a: { vote_average: number; }, b: { vote_average: number; }) => b.vote_average - a.vote_average));
+        return res.status(200).json(nationalityData.results.slice(0, top).sort((a: { vote_average: number; }, b: { vote_average: number; }) => b.vote_average - a.vote_average));
     } catch (error) {
         return printError(error, res);
     }
@@ -145,8 +145,8 @@ export const getTopMoviesByNationality = async (req: Request, res: Response): Pr
 
 export const getMoviesByGenre = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { genre } = req.body;
-        if (genre == undefined || genre.trim() == "") return res.status(500).json("The expected 'genre' parameter was not received.");
+        const { genre } = req.query;
+        if (genre == undefined) return res.status(500).json("The expected 'genre' parameter was not received.");
 
         const genreUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genre}`;
         const genreData = await fetchFromAPI(genreUrl);
@@ -161,15 +161,15 @@ export const getMoviesByGenre = async (req: Request, res: Response): Promise<Res
 
 export const getTopMoviesByGenre = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { genre, top } = req.body;
-        if (genre == undefined || genre.trim() == "" || top == undefined || top !== true) return res.status(500).json("The expected 'genre' and/or 'top' parameters were not received.");
+        const { genre, top } = req.query;
+        if (genre == undefined|| top == undefined) return res.status(500).json("The expected 'genre' and/or 'top' parameters were not received.");
 
         const genreUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genre}&sort_by=vote_average.desc`;
         const genreData = await fetchFromAPI(genreUrl);
 
         if (!genreData.results || genreData.results.length < 1) return res.status(500).json('No results found for the movie.');
 
-        return res.status(200).json(genreData.results.slice(0, 10));
+        return res.status(200).json(genreData.results.slice(0, top));
 
     } catch (error) {
         return printError(error, res);
