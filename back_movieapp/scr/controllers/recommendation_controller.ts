@@ -382,6 +382,11 @@ export const getRecommendationsByYears = async (req: Request, res: Response): Pr
     try {
         const recommendationQuantity = parseInt(req.query.recommendationQuantity as string ?? 10);
         console.log("recommendationQuantity",recommendationQuantity)
+        if (isNaN(recommendationQuantity) || recommendationQuantity < 1) {
+            return res.status(400).json({ message: "No se pueden ingresar valores menores o iguales a 0 en 'recommendationQuantity'." });
+
+        }
+
         const response: QueryResult = await pool.query('SELECT movie_id FROM public.user_movie WHERE user_id=$1', [req.usuario?.userId]);
 
         if ((response.rowCount ?? 0) > 0) {
@@ -443,6 +448,7 @@ async function getMoviesInfoParallel(ids: number[]): Promise<Array<MovieYear>> {
     try {
         const movieInfoPromises = ids.map((id) => getMovieInfo(id));
         const moviesInfo = await Promise.all(movieInfoPromises);
+        moviesInfo.sort((a, b) => (b.year || 0) - (a.year || 0));
         return moviesInfo;
     } catch (error) {
         // Manejo de errores
