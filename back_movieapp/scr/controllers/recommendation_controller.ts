@@ -286,18 +286,37 @@ export const getRecommendedMovies = async (req: Request, res: Response): Promise
 }
 
 // Obtener las dos películas más populares por género sin repetir películas y limitando a 2 por género
-async function getTopMoviesByGenre(genreId: number, moviesAlreadyAdded: number[]): Promise<any> {
+async function getTopMoviesByGenre(genreId: number, moviesAlreadyAdded: number[], recommendationQuantity: number): Promise<any> {
     const response = await fetch(`http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&with_genres=${genreId}&api_key=${API_KEY}`);
     const data = await response.json();
 
-    const topMovies = data.results.filter((movie: { id: number; }) => !moviesAlreadyAdded.includes(movie.id)).slice(0, 2);
+    const adjustedQuantity = Math.floor(recommendationQuantity / 5); // Divide recommendationQuantity por 5 y trunca el resultado
+    const topMovies = data.results.filter((movie: { id: number }) => !moviesAlreadyAdded.includes(movie.id)).slice(0, adjustedQuantity);
 
-    topMovies.forEach((movie: { id: number; }) => moviesAlreadyAdded.push(movie.id));
+    topMovies.forEach((movie: { id: number }) => moviesAlreadyAdded.push(movie.id));
 
     return topMovies;
 }
-// falta implementar recommendationQuantity 
-// Obtener las dos películas principales por género para todos los géneros sin repeticiones
+
+
+async function getOneMovieByGenre(genreId: number, moviesAlreadyAdded: number[]): Promise<any> {
+    console.log("genero; "+genreId)
+    const response = await fetch(`http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&with_genres=${genreId}&api_key=${API_KEY}`);
+    const data = await response.json();
+
+    const topMovie = data.results.find((movie: { id: number }) => !moviesAlreadyAdded.includes(movie.id));
+
+    if (topMovie) {
+        moviesAlreadyAdded.push(topMovie.id);
+        return [topMovie]; 
+    } else {
+        return []; 
+    }
+}
+
+
+
+// Obtener las películas principales por género para todos los géneros sin repeticiones
 async function getTopMoviesForEachGenre(recommendationQuantity: number) {
     try {
         let genres = [
@@ -310,11 +329,36 @@ async function getTopMoviesForEachGenre(recommendationQuantity: number) {
 
         let moviesAdded: number[] = [];
         let results: any[] = [];
+        if (recommendationQuantity >= 5)
+            for (const genre of genres) {
+                const topMovies = await getTopMoviesByGenre(genre.id, moviesAdded, recommendationQuantity);
 
-        for (const genre of genres) {
-            const topMovies = await getTopMoviesByGenre(genre.id, moviesAdded);
+                results.push({ genre: genre.name, topMovies });
+            }
+        else if (recommendationQuantity === 4) {
+            for (const genre of genres.slice(0, -1)) {
+                const topMovies = await getOneMovieByGenre(genre.id, moviesAdded);
+                results.push({ genre: genre.name, topMovies });
+            }
 
-            results.push({ genre: genre.name, topMovies });
+
+        }
+        else if (recommendationQuantity === 3) {
+            for (const genre of genres.slice(0, -2)) {
+                const topMovies = await getOneMovieByGenre(genre.id, moviesAdded);
+                results.push({ genre: genre.name, topMovies });
+            }
+        }
+        else if (recommendationQuantity === 2) {
+            for (const genre of genres.slice(0, -3)) {
+                const topMovies = await getOneMovieByGenre(genre.id, moviesAdded);
+                results.push({ genre: genre.name, topMovies });
+            }
+        }
+        else if (recommendationQuantity === 1) {
+            const topMovies = await getOneMovieByGenre(genres[0].id, moviesAdded);
+            results.push({ genre: genres[1].name, topMovies });
+
         }
 
         const enrichResult = await enrichMoviesWithDetails(results);
