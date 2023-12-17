@@ -3,4 +3,8 @@ Proyecto para la materia Teoria de Lenguaje.
 
 Francisco Sobral - 108603
 
-En este proyecto crearemmos una webapp para poder recomendar peliculas a nuestros clientes con distintos algoritmos. 
+Nelson Avila - 100244
+
+Oura, Jacqueline - 87622
+
+En este proyecto crearemos API REST para poder recomendar peliculas a nuestros clientes con distintos algoritmos. 

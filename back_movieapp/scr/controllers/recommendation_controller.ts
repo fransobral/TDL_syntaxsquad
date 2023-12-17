@@ -430,9 +430,7 @@ export const getRecommendationsByYears = async (req: Request, res: Response): Pr
             return res.status(400).json({ message: "No se pueden ingresar valores menores o iguales a 0 en 'recommendationQuantity'." });
 
         }
-
         const response: QueryResult = await pool.query('SELECT movie_id FROM public.user_movie WHERE user_id=$1', [req.usuario?.userId]);
-
         if ((response.rowCount ?? 0) > 0) {
 
             const resultRec = await recomendacionPorAnioDeFavoritos(response.rows.map(x => x.movie_id), recommendationQuantity);

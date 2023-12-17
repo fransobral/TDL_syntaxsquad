@@ -48,7 +48,7 @@ router.get('/favoriteMovie', verificarToken, getUserMovie);
  * @swagger
  * /api/favoriteMovie:
  *     post:
- *      summary: Created new favorite movie
+ *      summary: Create a new favorite movie
  *      tags: [Favorite]
  *      requestBody:
  *         required: true

@@ -41,7 +41,7 @@ async function getAllMovieDetails(movieIds: number[]): Promise<any[]> {
 
 export const getUserMovie = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const response: QueryResult = await pool.query('select * from user_movie where user_id=$1', [req.usuario?.userId]);
+        const response: QueryResult = await pool.query('select * from user_movie where user_id=$1  and status = 1', [req.usuario?.userId]);
 
         const moviesDetails = await getAllMovieDetails(response.rows.map(x => x.movie_id));
 
@@ -54,7 +54,7 @@ export const getUserMovie = async (req: Request, res: Response): Promise<Respons
 export const getUserMovieId = async (req: Request, res: Response): Promise<Response> => {
     try {
         const id = parseInt(req.params.id);
-        const response: QueryResult = await pool.query('select * from user_movie where movie_id = $1', [id]);
+        const response: QueryResult = await pool.query('select * from user_movie where movie_id = $1 and status = 1', [id]);
         if (!response.rows[0]?.movie_id)
             return res.status(200).json({});
         const movieDetails = await getMovieDetails(response.rows[0]?.movie_id);
@@ -64,22 +64,12 @@ export const getUserMovieId = async (req: Request, res: Response): Promise<Respo
     }
 }
 
-// export const getUserMovieUserId = async (req: Request, res: Response): Promise<Response> => {
-//     try {
-//         const id = parseInt(req.params.id);
-//         const response: QueryResult = await pool.query('select * from user_movie where status = 1 and user_id = $1', [id]);
-//         return res.status(200).json(response.rows);
-//     } catch (error) {
-//         return printError(error, res);
-//     }
-// }
-
 export const deleteUserMovie = async (req: Request, res: Response): Promise<Response> => {
     try {
         const id = parseInt(req.params.id);
         const response: QueryResult = await pool.query('update user_movie set status = 0 where movie_id = $1 and status = 1 and user_id = $2', [id,req.usuario?.userId]);
         if (response.rowCount == 0) return res.status(500).json(`The record does not exist in the database`);
-        return res.status(200).json(`ID ${id} deleted Successfully`);
+        return res.status(200).json(`ID ${id} has been deleted Successfully`);
     } catch (error) {
         return printError(error, res);
     }
@@ -103,7 +93,7 @@ export const createUserMovie = async (req: Request, res: Response): Promise<Resp
                 }
             }
         };
-        console.log("awef",res2)
+        //console.log("awef",res2)
         return res.status(200).json(res2);
     } catch (error) {
         return printError(error, res);

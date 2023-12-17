@@ -13,7 +13,7 @@ function printError(error: unknown, res: Response<any, Record<string, any>>) {
 
 export const getUsers = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const response: QueryResult = await pool.query('select id, email, created from users where status = 1 order by id asc');
+        const response: QueryResult = await pool.query('select id, email, created, admin from users where status = 1 order by id asc');
         return res.status(200).json(response.rows);
     } catch (error) {
         return printError(error, res);
@@ -56,7 +56,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
 
         if (response.rowCount == 0) return res.status(500).json(`The record does not exist in the database`);
 
-        return res.status(200).json(`User ${id} deleted Successfully`);
+        return res.status(200).json(`User id: ${id}has been deleted Successfully`);
     } catch (error) {
         return printError(error, res);
     }
@@ -65,7 +65,10 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { email, password } = req.body;
-        const response: QueryResult = await pool.query('select id, email, created from users where status = 1 and email = $1', [email]);
+   
+        const response: QueryResult = await pool.query('select id, email created from users where status = 1 and email = $1', [email]);
+        console.log(response);
+        console.log("fin ");
         if (response.rowCount != 0) return res.status(500).json('Internal Server Error. There is an account with that email.');
         await pool.query('insert into users (email, password) values ($1, $2)', [email, password]);
 
@@ -74,7 +77,7 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
             body: {
                 user: {
                     email,
-                    password
+                    password,                 
                 }
             }
         });

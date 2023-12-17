@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { createUser, deleteUser, getUserById, getUsers, updateUser } from '../controllers/users_controller'
 import { verificarToken } from "../controllers/authService_controller";
+import { verificarTokenAdmin } from "../controllers/authService_controller";
 
 const router = Router();
 
@@ -43,7 +44,7 @@ const router = Router();
  *                          items:
  *                              $ref: '#/components/schemas/User'
  */
-router.get('/users', verificarToken, getUsers);
+router.get('/users', verificarTokenAdmin, getUsers);
 
 
 /**
@@ -71,7 +72,7 @@ router.get('/users', verificarToken, getUsers);
  *          404:
  *              description: user not found
  */
-router.get('/users/:id', verificarToken, getUserById);
+router.get('/users/:id', verificarTokenAdmin, getUserById);
 
 /**
  * @swagger
@@ -90,7 +91,7 @@ router.get('/users/:id', verificarToken, getUserById);
  *          200:
  *             description: new user created!
  */
-router.post('/users', verificarToken, createUser);
+router.post('/users', verificarTokenAdmin, createUser);
 
 /**
  * @swagger
@@ -118,7 +119,7 @@ router.post('/users', verificarToken, createUser);
  *          404:
  *              description: user not found
  */
-router.put('/users/:id', verificarToken, updateUser);
+router.put('/users/:id', verificarTokenAdmin, updateUser);
 
 /**
  * @swagger
@@ -139,6 +140,6 @@ router.put('/users/:id', verificarToken, updateUser);
  *          404:
  *              description: user not found
  */
-router.delete('/users/:id', verificarToken, deleteUser);
+router.delete('/users/:id', verificarTokenAdmin, deleteUser);
 
 export default router;

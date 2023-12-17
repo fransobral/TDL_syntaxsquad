@@ -7,13 +7,22 @@
 create database tdl2023_db;
 
 DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(20) NOT NULL,
+    email VARCHAR(320) NOT NULL,
     password VARCHAR(16) NOT NULL,
     created TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    status INT DEFAULT 1 CHECK (status IN (0, 1))
+    status INT DEFAULT 1 CHECK (status IN (0, 1)),
+    admin INT NOT NULL DEFAULT 0 CHECK (admin IN (0, 1))
 );
+
+-- Dato importante: Insertar usuario administrador con id 1 manualmente por base de datos, por endpoints se podra agregar solo usuarios no con rol admin nuestro proyecto soporta SOLO un admin
+INSERT INTO 
+    users (id, email, password, admin) 
+VALUES (1,'oura@gmail.com', '123456', 1);
+VALUES (2,'testbrian@gmail.com', '123456',0),
+VALUES (3,'testbrian2023@gmail.com', 'AASDF',0);
 
 DROP TABLE IF EXISTS user_movie;
 CREATE TABLE user_movie (
@@ -34,8 +43,8 @@ CREATE TABLE rated_movie (
     status INT DEFAULT 1 CHECK (status IN (0, 1))  NOT NULL
 );
 
-insert into
-    users (email, password)
-values
-    ('testbrian@gmail.com', 123456),
-    ('testbrian2023@gmail.com', 123456);
+-- insert into
+--     users (email, password)
+-- values
+--     ('testbrian@gmail.com', 123456),
+--     ('testbrian2023@gmail.com', 123456);
