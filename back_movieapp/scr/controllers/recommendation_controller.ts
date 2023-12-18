@@ -419,27 +419,21 @@ async function getMovieDetails(movieId: number): Promise<any> {
 
 
 
-//----------------------------------------
-//RECOMENDADOR 2
-
 export const getRecommendationsByYears = async (req: Request, res: Response): Promise<Response> => {
     try {
         const recommendationQuantity = parseInt(req.query.recommendationQuantity as string ?? 10);
-        console.log("recommendationQuantity",recommendationQuantity)
+       
         if (isNaN(recommendationQuantity) || recommendationQuantity < 1) {
             return res.status(400).json({ message: "No se pueden ingresar valores menores o iguales a 0 en 'recommendationQuantity'." });
-
         }
         const response: QueryResult = await pool.query('SELECT movie_id FROM public.user_movie WHERE user_id=$1', [req.usuario?.userId]);
         if ((response.rowCount ?? 0) > 0) {
-
             const resultRec = await recomendacionPorAnioDeFavoritos(response.rows.map(x => x.movie_id), recommendationQuantity);
             return res.status(200).json(resultRec);
         } else {
             const result = await getTopMoviesForEachGenre(recommendationQuantity);
             return res.status(200).json(result);
         }
-
     }
     catch (error) {
         return printError(error, res);
@@ -512,7 +506,7 @@ async function getMovieInfo(movieId: number): Promise<MovieYear> {
 
         return { id, year: releaseYear };
     } catch (error) {
-        // Manejo de errores
+      
         console.error(`Error al obtener información de la película con ID ${movieId}:`, error);
         throw error;
     }

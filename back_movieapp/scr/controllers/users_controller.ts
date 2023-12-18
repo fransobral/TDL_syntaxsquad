@@ -65,15 +65,24 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { email, password } = req.body;
-   
-        const response: QueryResult = await pool.query('select id, email created from users where status = 1 and email = $1', [email]);
+        
+        const passwordRegex = /^[a-zA-Z0-9!"#$%&'()*+,-./:;<=>?@[\\\]^_`{|}~]+$/; 
+
+        if (!password || password.length <= 4 || !passwordRegex.test(password) || password.includes("▼")) {
+            return res.status(400).json({ message: "La contraseña debe tener más de 4 caracteres, no puede estar vacía y no debe contener caracteres especiales no permitidos." });
+        }
+        const response: QueryResult = await pool.query('SELECT id, email, created FROM users WHERE status = 1 AND email = $1', [email]);
         console.log(response);
         console.log("fin ");
-        if (response.rowCount != 0) return res.status(500).json('Internal Server Error. There is an account with that email.');
-        await pool.query('insert into users (email, password) values ($1, $2)', [email, password]);
+        
+        if (response.rowCount !== 0) {
+            return res.status(500).json('Internal Server Error. Hay una cuenta con ese correo electrónico.');
+        }
+
+        await pool.query('INSERT INTO users (email, password) VALUES ($1, $2)', [email, password]);
 
         return res.status(200).json({
-            message: "User created Successfully",
+            message: "Usuario creado exitosamente",
             body: {
                 user: {
                     email,

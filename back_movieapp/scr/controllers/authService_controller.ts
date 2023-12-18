@@ -24,7 +24,7 @@ const secretKey = 'pepeGrilloPerroBonito123456789111111jacquelineoura';
 async function verifyCredentials(username: string, password: string): Promise<any | undefined> {
   try {
     const responseUser: QueryResult = await pool.query('SELECT * FROM users WHERE email = $1 AND status = $2 AND password = $3', [username, 1, password]);
-console.log("responseUser.rowCount: "+responseUser.rowCount);
+//console.log("responseUser.rowCount: "+responseUser.rowCount);
     if ((responseUser.rowCount ?? 0) === 0) {
       return undefined;
     }

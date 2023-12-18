@@ -2,7 +2,6 @@ import express from 'express';
 import usersRoutes from './Routes/users';
 import userMovieRoutes from './Routes/user_movie';
 import moviesRoutes from './Routes/movies';
-import ratedMovieRoutes from './Routes/rated_movie';
 import recommendationRoute from './Routes/recommendation';
 import loginRoute from './Routes/authService';
 
@@ -52,7 +51,6 @@ app.use("/api-doc", swaggerUI.serve, swaggerUI.setup(swaggerJSDoc(swaggerSpec)))
 app.use('/api', usersRoutes);
 app.use('/api', userMovieRoutes);
 app.use('/api', moviesRoutes);
-app.use('/api', ratedMovieRoutes);
 app.use('/api', recommendationRoute);
 app.use('/api', loginRoute);
 

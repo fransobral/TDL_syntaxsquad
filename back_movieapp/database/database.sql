@@ -21,8 +21,8 @@ CREATE TABLE users (
 INSERT INTO 
     users (id, email, password, admin) 
 VALUES (1,'oura@gmail.com', '123456', 1);
-VALUES (2,'testbrian@gmail.com', '123456',0),
-VALUES (3,'testbrian2023@gmail.com', 'AASDF',0);
+VALUES (2,'usuario@gmail.com', '121212',0),
+VALUES (3,'elusuario@gmail.com', '123',0);
 
 DROP TABLE IF EXISTS user_movie;
 CREATE TABLE user_movie (
@@ -33,18 +33,3 @@ CREATE TABLE user_movie (
     status INT DEFAULT 1 CHECK (status IN (0, 1))
 );
 
-DROP TABLE IF EXISTS rated_movie;
-CREATE TABLE rated_movie (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) NOT NULL,
-    movie_id INTEGER NOT NULL,
-    liked INT CHECK (liked IN (0, 1)) NOT NULL,
-    created TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    status INT DEFAULT 1 CHECK (status IN (0, 1))  NOT NULL
-);
-
--- insert into
---     users (email, password)
--- values
---     ('testbrian@gmail.com', 123456),
---     ('testbrian2023@gmail.com', 123456);
