@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { RequestInfo } from 'undici-types';
 import { QueryResult } from 'pg';
 import { pool } from '../DataBase';
 
@@ -17,14 +16,10 @@ async function getMovieGenres(movieId: number): Promise<number[]> {
         const response = await fetch(
             `https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}`
         );
-
         if (!response.ok) {
             throw new Error(`Error al obtener los géneros de la película ${movieId}. Código de estado: ${response.status}`);
         }
-
         const data = await response.json();
-
-        // Obtener los IDs de géneros de la película
         const genres: number[] = data.genres.map((genre: any) => genre.id);
 
         return genres;
@@ -126,9 +121,7 @@ async function getMoviesByYear(year: number): Promise<Movie[]> {
         if (!response.ok) {
             throw new Error(`Error al obtener las películas del año ${year}. Código de estado: ${response.status}`);
         }
-
         const data = await response.json();
-
         const movies: Movie[] = data.results.map((movie: Movie) => ({
             id: movie.id,
             title: movie.title,
@@ -151,7 +144,6 @@ async function obtenerGeneroPorId(id: number): Promise<Gender> {
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
         const data = await response.json();
         let gender: Gender = {
             id: data.id,
@@ -183,7 +175,6 @@ async function getSuggestedMovies(movieIds: number[], recommendationQuantity: nu
     const favoriteGenres = await getFavoriteGenres(movieIds);
     const favoriteActors = await getFavoriteActors(movieIds);
 
-
     const suggestions: Movie[] = [];
     const currentYear = new Date().getFullYear();
 
@@ -214,15 +205,10 @@ async function getSuggestedMovies(movieIds: number[], recommendationQuantity: nu
             }
         } catch (error) {
             console.error(`Error al obtener películas del año ${year}: ${error}`);
-
         }
     }
-
     return suggestions;
 }
-
-// Uso de la función getSuggestedMovies con una lista de IDs de películas favoritas
-
 
 
 export const getRecommendedMovies = async (req: Request, res: Response): Promise<Response> => {
@@ -300,12 +286,10 @@ async function getTopMoviesByGenre(genreId: number, moviesAlreadyAdded: number[]
 
 
 async function getOneMovieByGenre(genreId: number, moviesAlreadyAdded: number[]): Promise<any> {
-    console.log("genero; "+genreId)
+   
     const response = await fetch(`http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&with_genres=${genreId}&api_key=${API_KEY}`);
     const data = await response.json();
-
     const topMovie = data.results.find((movie: { id: number }) => !moviesAlreadyAdded.includes(movie.id));
-
     if (topMovie) {
         moviesAlreadyAdded.push(topMovie.id);
         return [topMovie]; 
@@ -326,13 +310,11 @@ async function getTopMoviesForEachGenre(recommendationQuantity: number) {
             { id: 28, name: "Action" },
             { id: 12, name: "Adventure" }
         ];
-
         let moviesAdded: number[] = [];
         let results: any[] = [];
         if (recommendationQuantity >= 5)
             for (const genre of genres) {
                 const topMovies = await getTopMoviesByGenre(genre.id, moviesAdded, recommendationQuantity);
-
                 results.push({ genre: genre.name, topMovies });
             }
         else if (recommendationQuantity === 4) {
@@ -340,8 +322,6 @@ async function getTopMoviesForEachGenre(recommendationQuantity: number) {
                 const topMovies = await getOneMovieByGenre(genre.id, moviesAdded);
                 results.push({ genre: genre.name, topMovies });
             }
-
-
         }
         else if (recommendationQuantity === 3) {
             for (const genre of genres.slice(0, -2)) {
@@ -360,9 +340,7 @@ async function getTopMoviesForEachGenre(recommendationQuantity: number) {
             results.push({ genre: genres[1].name, topMovies });
 
         }
-
         const enrichResult = await enrichMoviesWithDetails(results);
-
         return enrichResult;
     } catch (error) {
         console.error('Error:', error);
@@ -375,13 +353,9 @@ async function enrichMoviesWithDetails(movies: any[]): Promise<any[]> {
 
     const fetchMovieDetails = async (movie: { id: number; }) => {
         const movieDetailsPromise = getMovieDetails(movie.id);
-        // const actorsPromise = getActorsForMovie(movie.id);
-
         const [movieDetails] = await Promise.all([movieDetailsPromise]);
-
         return movieDetails;
     };
-
     for (const genreMovies of movies) {
         if (genreMovies) {
             const moviesPromises = genreMovies.topMovies.map((movie: { id: number; }) => fetchMovieDetails(movie));
@@ -389,7 +363,6 @@ async function enrichMoviesWithDetails(movies: any[]): Promise<any[]> {
             enrichedMovies.push(...moviesDetails);
         }
     }
-
     return enrichedMovies;
 }
 // Función para obtener los actores de una película por su ID
@@ -404,9 +377,7 @@ async function getMovieDetails(movieId: number): Promise<any> {
     const response = await fetch(`http://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}`);
     const data = await response.json();
     const genres = data.genres.map((genre: any) => genre.name);
-
     const actors = await getActorsForMovie(movieId);
-
     return {
         id: data.id,
         title: data.title,
@@ -454,12 +425,10 @@ async function fetchMovies(year: number, recoCount: number): Promise<Movie[]> {
     const response = await fetch(
         `http://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=es&sort_by=popularity.desc&primary_release_year=${year}`
     );
-
     if (!response.ok) {
         console.error(`No se pudo obtener películas para el año ${year}.`);
         return [];
     }
-
     const data = await response.json();
     const movies: Movie[] = data.results.slice(0, recoCount);
     return movies;
@@ -470,9 +439,7 @@ async function recommendMovies(recommendations: Recommendation[]): Promise<any> 
         const promises = recommendations.map(({ year, recoCount }) =>
             fetchMovies(year, recoCount)
         );
-
         const movieLists = await Promise.all(promises);
-
         return movieLists.flat();
     } catch (error) {
         console.error('Hubo un error al obtener las recomendaciones de películas:', error);
@@ -528,19 +495,14 @@ async function recomendacionPorAnioDeFavoritos(ids: number[], recommendationQuan
         percentages[year] = (yearsMap[year] / totalFavoriteMovies) * 100;
     }
 
-    const totalMovies = recommendationQuantity; // Total de películas recomendadas
-
-
-
+    const totalMovies = recommendationQuantity; 
     const movieCounts: Recommendation[] = [];
-
     for (const yearKey in percentages) {
         if (percentages.hasOwnProperty(yearKey)) {
             const percentage = percentages[yearKey];
             const Recommendation = Math.trunc((percentage * totalMovies) / 100);
             movieCounts.push({ year: Number(yearKey), recoCount: Recommendation });
         }
-
     }
 
 
@@ -556,12 +518,9 @@ async function recomendacionPorAnioDeFavoritos(ids: number[], recommendationQuan
 
     // Calculando la suma total actual de las recomendaciones
     const totalCurrentRecommendations = movieCounts.reduce((total, movie) => total + movie.recoCount, 0);
-
     const diff = recommendationQuantity - totalCurrentRecommendations;
     movieCounts[maxIndex].recoCount += diff;
-
     const result = await recommendMovies(movieCounts);
-
     const moviesWithDetails = await Promise.all(result.map((x: { id: any; }) => x.id).map(async (movieId: number) => {
         try {
             const movieDetails = await getMovieDetails(movieId);
@@ -571,12 +530,6 @@ async function recomendacionPorAnioDeFavoritos(ids: number[], recommendationQuan
             return null;
         }
     }));
-
-    // console.log("Recommendation final: ");
-    // console.log(moviesWithDetails);
-    return moviesWithDetails;
-    //peliculas del año orden por puntuacion
-
-
+    return moviesWithDetails; 
 }
 

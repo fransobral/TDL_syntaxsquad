@@ -72,9 +72,6 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
             return res.status(400).json({ message: "La contraseña debe tener más de 4 caracteres, no puede estar vacía y no debe contener caracteres especiales no permitidos." });
         }
         const response: QueryResult = await pool.query('SELECT id, email, created FROM users WHERE status = 1 AND email = $1', [email]);
-        console.log(response);
-        console.log("fin ");
-        
         if (response.rowCount !== 0) {
             return res.status(500).json('Internal Server Error. Hay una cuenta con ese correo electrónico.');
         }
