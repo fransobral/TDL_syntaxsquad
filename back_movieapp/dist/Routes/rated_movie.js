@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const rated_movie_controller_1 = require("../controllers/rated_movie_controller");
+const router = (0, express_1.Router)();
+router.get('/rated_movie', rated_movie_controller_1.getRatedMovie);
+router.get('/rated_movie/:id', rated_movie_controller_1.getRatedMovieById);
+router.get('/rated_movie/user/:id', rated_movie_controller_1.getRatedMovieByUserId);
+router.post('/rated_movie', rated_movie_controller_1.createRatedMovie);
+router.put('/rated_movie/:id', rated_movie_controller_1.updateRatedMovie);
+router.delete('/rated_movie/:id', rated_movie_controller_1.deleteRatedMovie);
+exports.default = router;
